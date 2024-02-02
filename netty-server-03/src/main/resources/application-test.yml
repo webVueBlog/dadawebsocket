@@ -1,0 +1,55 @@
+server:
+  port: 9003
+spring:
+  # Kafka配置
+  kafka:
+    bootstrap-servers: localhost:9092
+    # 生产者配置
+    producer:
+      #procedure要求leader在考虑完成请求之前收到的确认数，用于控制发送记录在服务端的持久化，其值可以为如下：
+      #acks = 0 如果设置为零，则生产者将不会等待来自服务器的任何确认，该记录将立即添加到套接字缓冲区并视为已发送。
+      # 在这种情况下，无法保证服务器已收到记录，并且重试配置将不会生效（因为客户端通常不会知道任何故障），为每条记录返回的偏移量始终设置为-1。
+      #acks = 1 这意味着leader会将记录写入其本地日志，但无需等待所有副本服务器的完全确认即可做出回应，
+      # 在这种情况下，如果leader在确认记录后立即失败，但在将数据复制到所有的副本服务器之前，则记录将会丢失。
+      #acks = all 这意味着leader将等待完整的同步副本集以确认记录，这保证了只要至少一个同步副本服务器仍然存活，记录就不会丢失，这是最强有力的保证，这相当于acks = -1的设置。
+      #可以设置的值为：all, -1, 0, 1
+      acks: all
+      retries: 0
+      batch-size: 16384
+      buffer-memory: 33554432
+      compression-type: gzip
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    # 消费者配置
+    consumer:
+      # 消费组(必须设置，且是唯一的，默认好像有一个，但是还是需要自己手动设置消费组，不然消费者就会无法消费)
+      group-id: netty-server-consumer-03-group
+      # 是否自动提交offset(建议：手动提交offset)
+      enable-auto-commit: false
+    # 监听器
+    listener:
+      #侦听器的AckMode,参见https://docs.spring.io/spring-kafka/reference/htmlsingle/#committing-offsets
+      #当enable.auto.commit的值设置为false时，该值会生效；为true时不会生效
+      # MANUAL：手动调用Acknowledgment.acknowledge()后，并且处理完poll的这批数据后提交。
+      ack-mode: manual
+      # 多线程监听
+      concurrency: 3
+  # Redis配置
+  redis:
+    host: localhost
+    port: 6379
+    password: 123456
+    lettuce:
+      pool:
+        # 连接池最大连接数（使用负值表示没有限制）
+        max-active: 8
+        # 连接池中的最大空闲连接
+        max-idle: 8
+        # 连接池中的最小空闲连接
+        min-idle: 0
+        # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-wait: -1ms
+# zookeeper配置
+zookeeper:
+  address: localhost:2181
+  timeout: 4000 # 连接超时时间
